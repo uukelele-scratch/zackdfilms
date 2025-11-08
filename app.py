@@ -100,7 +100,7 @@ async def create_video(sentence):
                 print("Warning: Video duration or FPS is zero or invalid. No frames to write.")
                 raise ValueError("Cannot process video with zero duration or fps.")
 
-            font = ImageFont.truetype("/assets/font.ttf", size=20)
+            font = ImageFont.truetype("assets/font.ttf", size=20)
             interval_frames = int(2.5 * fps)
             x, y = random.randint(0, final.w - 200), random.randint(0, final.h - 50)
 
