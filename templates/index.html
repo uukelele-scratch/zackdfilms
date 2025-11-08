@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zack D. Films Sentence Creator</title>
+    {{ hy.css() }}
+    <style>
+        footer { text-align: center; }
+
+        :root { --pico-border-radius: 0.75rem; }
+
+        /*[data-theme=light],
+        :root:not([data-theme=dark]),
+        :host:not([data-theme=dark]) {
+        --pico-text-selection-color: rgba(69, 179, 157, 0.25);
+        --pico-primary: #45B39D;
+        --pico-primary-background: #45B39D;
+        --pico-primary-underline: rgba(69, 179, 157, 0.5);
+        --pico-primary-hover: #16A085;
+        --pico-primary-hover-background: #16A085;
+        --pico-primary-focus: rgba(69, 179, 157, 0.5);
+        --pico-primary-inverse: #fff;
+        }
+
+        @media only screen and (prefers-color-scheme: dark) {
+        :root:not([data-theme]),
+        :host:not([data-theme]) {
+            --pico-text-selection-color: rgba(46, 204, 113, 0.1875);
+            --pico-primary: #2ECC71;
+            --pico-primary-background: #2ECC71;
+            --pico-primary-underline: rgba(46, 204, 113, 0.5);
+            --pico-primary-hover: #58D68D;
+            --pico-primary-hover-background: #58D68D;
+            --pico-primary-focus: rgba(46, 204, 113, 0.375);
+            --pico-primary-inverse: #000;
+        }
+        }
+
+        [data-theme=dark] {
+        --pico-text-selection-color: rgba(46, 204, 113, 0.1875);
+        --pico-primary: #2ECC71;
+        --pico-primary-background: #2ECC71;
+        --pico-primary-underline: rgba(46, 204, 113, 0.5);
+        --pico-primary-hover: #58D68D;
+        --pico-primary-hover-background: #58D68D;
+        --pico-primary-focus: rgba(46, 204, 113, 0.375);
+        --pico-primary-inverse: #000;
+        }*/
+
+        html, body {
+        height: 100%;
+        margin: 0;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        }
+
+        body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        }
+
+        * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--pico-primary) var(--pico-background-color);
+        }
+
+        *::-webkit-scrollbar {
+        height: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+        background: var(--pico-background-color);
+        border-radius: var(--pico-border-radius);
+        }
+
+        *::-webkit-scrollbar-thumb {
+        background-color: var(--pico-primary);
+        border-radius: var(--pico-border-radius);
+        
+        border: 3px solid var(--pico-background-color);
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+        background-color: var(--pico-primary-hover);
+        }
+
+        main { flex: 1; }
+
+        footer { padding: 1rem; text-align: center; }
+
+        a /*> button*/ {
+        text-decoration: none;
+        --pico-text-decoration: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        button { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+        small[display] { text-align: right; }
+        .percentage { width: min-content; }
+        progress { border-bottom-right-radius: var(--pico-border-radius) !important; border-top-right-radius: var(--pico-border-radius) !important;}
+        .word-chip { background-color: var(--pico-form-element-selected-background-color); margin: .5rem; padding: .3rem .5rem; border-radius: var(--pico-border-radius); margin-bottom: 0.5rem; }
+        .active { background-color: var(--pico-primary); color: var(--pico-background-color); }
+
+        video#output {
+            border-radius: var(--pico-border-radius); /*margin: 2rem;*/
+
+            width: 360px;
+            height: 640px;
+        }
+
+        .top {
+            margin-bottom: 2rem;
+        }
+
+        .bottom {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .left, .right {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /*.left, */.right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .left, .right, .top {
+            box-shadow: var(--pico-box-shadow);
+            border-radius: var(--pico-border-radius);
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <div class="top">
+            <h1>Zack D. Films Sentence Creator</h1>
+            <h4>Create sentences out of Zack D. Films clips!</h4>
+        </div>
+
+        <div class="bottom">
+
+            <div class="left">
+                <form sentence>
+                    <fieldset role="group">
+                        <input type="text" placeholder="Enter a sentence...">
+                        <button>{{ hy.icon("sparkles") }} Create!</button>
+                    </fieldset>
+                </form>
+
+                <small display></small>
+
+                <fieldset role="group" style="display: flex; justify-content: center; align-items: center; gap: 1rem;">
+                    <progress id="bar" value="0" max="100"></progress>
+                    <span class="percentage">0%</span>
+                </fieldset>
+
+                <div class="word-list"></div>
+            </div>
+
+            <div class="right">
+                <video id="output" controls></video>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <p>Zack D. Films Sentence Creator &copy; 2025</p>
+    </footer>
+
+    <script>
+        const $ = document.querySelector.bind(document);
+
+        function createWordChips(sentence) {
+            const wordList = $('.word-list');
+            wordList.innerHTML = '';
+
+            const words = sentence.trim().split(/\s+/);
+            words.forEach(word => {
+                const chip = document.createElement('span');
+                chip.textContent = word;
+                chip.className = 'word-chip';
+                chip.dataset.word = word;
+                wordList.appendChild(chip);
+            });
+        }
+
+        function highlightCurrentWord(word) {
+            const wordChips = document.querySelectorAll('.word-chip');
+            wordChips.forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.dataset.word === word) {
+                    chip.classList.add('active');
+                }
+            });
+        }
+
+        const sentenceInput = $('[sentence] input');
+        sentenceInput.addEventListener('input', () => {
+            sentenceInput.ariaInvalid = '';
+            if (sentenceInput.value.trim()) {
+                createWordChips(sentenceInput.value);
+            } else {
+                $('.word-list').innerHTML = '';
+            }
+        });
+
+        $('form[sentence]').addEventListener('submit', async e => {
+            e.preventDefault();
+
+            e.submitter.ariaBusy = true;
+            e.submitter.disabled = true;
+
+            $('small[display]').innerText = '';
+            $('small[display]').ariaInvalid = '';
+            sentenceInput.ariaInvalid = '';
+
+            try {
+                const sentence = sentenceInput.value;
+
+                if (!sentence) return;
+
+                createWordChips(sentence);
+                
+                const bar = $('#bar');
+                bar.max = sentence.split(/\s+/).length + 2;
+                bar.value = 0;
+
+                const percentage = $('.percentage');
+                percentage.innerText = "0%";
+
+                const status = $('small[display]');
+                status.innerHTML = "";
+
+                const output = $('#output');
+                // output.controls = true;
+                // output.classList.remove('hidden');
+
+                hy.portal.on("log", payload => {
+                    const { event, data } = payload;
+
+                    // console.log(payload);
+                    if (event === "progress") {
+                        bar.value++;
+                        percentage.innerText = Math.round((bar.value / bar.max) * 100) + "%";
+
+                        if (data?.step === "loaded") {
+                            highlightCurrentWord(data.word);
+                            status.innerHTML = `Loaded Word: '<span class="highlight">${data.word}</span>'`;
+                        } else {
+                            status.innerHTML = data.step;
+                        }
+                    }
+
+                    if (event === "done") {
+                        const video_data = data.video_bytes;
+
+                        function uint8ToBase64(bytes) {
+                            let binary = '';
+                            const len = bytes.length;
+                            for (let i = 0; i < len; i++) {
+                                binary += String.fromCharCode(bytes[i]);
+                            }
+                            return btoa(binary);
+                        }
+                        output.src = "data:video/mp4;base64," + uint8ToBase64(video_data);
+                        
+                        status.innerText = "Complete.";
+                        
+                        document.querySelectorAll('.word-chip').forEach(chip => {
+                            chip.classList.remove('active');
+                        })
+                    }
+
+                    if (event === "error") {
+                        // throw new Error(data.error ?? data.msg);
+                        $('small[display]').innerText = data.error ?? data.msg;
+                        $('small[display]').ariaInvalid = true;
+                        sentenceInput.ariaInvalid = true;
+                    }
+                });
+
+                // Blocking call. Will take a while.
+                const video = await hy.portal.create_video(sentence);
+
+            } catch (err) {
+                $('small[display]').innerText = err.message;
+                $('small[display]').ariaInvalid = true;
+                sentenceInput.ariaInvalid = true;
+            } finally {
+                e.submitter.ariaBusy = false;
+                e.submitter.disabled = false;
+            }
+        });
+
+        const sentence = sentenceInput.value.trim();
+        if (sentence) createWordChips(sentence);
+    </script>
+</body>
+</html>

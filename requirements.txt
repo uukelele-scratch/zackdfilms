@@ -1,0 +1,5 @@
+git+https://github.com/uukelele-scratch/hybridoma.git
+numpy
+moviepy<=1.0.3
+pillow
+python-dotenv

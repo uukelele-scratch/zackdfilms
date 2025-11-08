@@ -1,0 +1,10 @@
+services:
+  zackdfilms:
+    build: .
+    ports:
+      - "${PORT_MAP:-9979:9979}"
+    volumes:
+      - ./downloads:/app/downloads
+      - ./new.db:/app/new.db
+      - ./transcriptions.db:/app/transcriptions.db
+    restart: unless-stopped
